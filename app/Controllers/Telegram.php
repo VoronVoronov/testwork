@@ -1,11 +1,10 @@
 <?php namespace App\Controllers;
 
-use CodeIgniter\Controller;
 use CURLFile;
 use App\Models\MessageModel;
 use ReflectionException;
 
-class TelegramBot extends Controller
+class TelegramBot extends BaseController
 {
 
     static private string $botToken = '<ВАШ_ТОКЕН>';
