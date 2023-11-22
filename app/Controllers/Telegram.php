@@ -67,7 +67,11 @@ class Telegram extends BaseController
             ]);
             $this->sendGreeting($chatId, $name);
         } else {
-            $this->send('message', $chatId, "Спасибо за сообщение");
+            $post_fields = array(
+                'chat_id' => $chatId,
+                'text' => "Спасибо за сообщение"
+            );
+            $this->send('message', $post_fields, true);
         }
 
         return 1;
@@ -174,7 +178,7 @@ class Telegram extends BaseController
         return self::saveMessage([
             'message_type' => $type,
             'payload' => $post_fields,
-            'user_id' => json_decode($post_fields, true)['chat_id'] ?? 0,
+            'user_id' => json_decode($post_fields, true)['chat_id'],
             'created_at' => date('Y-m-d H:i:s')
         ]);
     }
