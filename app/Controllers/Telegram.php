@@ -38,7 +38,7 @@ class Telegram extends BaseController
 
         if (isset($message['photo']) || isset($message['video'])) {
             if(isset($message['photo'])){
-                $fileId = $message['photo'][0]['file_id'];
+                $fileId = $message['photo'][2]['file_id'];
             } else {
                 $fileId = $message['video']['file_id'];
             }
