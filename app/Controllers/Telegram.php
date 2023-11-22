@@ -9,7 +9,7 @@ class TelegramBot extends BaseController
 
     static private string $botToken = '<ВАШ_ТОКЕН>';
 
-    public function webhook() {
+    public function index() {
         $input = file_get_contents('php://input');
         $update = json_decode($input, true);
 
