@@ -42,15 +42,14 @@ class Telegram extends BaseController
                         'photo' => $savedPath,
                         'caption' => 'Вы отправили нам это фото'
                     );
-                    self::send('photo', $post_fields, true);
                 } else {
                     $post_fields = array(
                         'chat_id' => $chatId,
                         'photo' => $savedPath,
                         'caption' => $responseMessage
                     );
-                    self::send('text', $chatId, $post_fields);
                 }
+                self::send('photo', $post_fields, true);
             }
         }
 
