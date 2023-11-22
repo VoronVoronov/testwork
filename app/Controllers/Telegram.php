@@ -37,7 +37,11 @@ class Telegram extends BaseController
         }
 
         if (isset($message['photo']) || isset($message['video'])) {
-            $fileId = $message['photo'] ? $message['photo'][0]['file_id'] : $message['video']['file_id'];
+            if(isset($message['photo'])){
+                $fileId = $message['photo'][0]['file_id'];
+            } else {
+                $fileId = $message['video']['file_id'];
+            }
             $filePath = $this->getFile($fileId);
 
             if ($filePath) {
@@ -52,14 +56,15 @@ class Telegram extends BaseController
                         'photo' => new CURLFile($savedPath),
                         'caption' => 'Вы отправили нам это фото'
                     );
+                    self::send('photo', $post_fields, true);
                 } else {
                     $post_fields = array(
                         'chat_id' => $chatId,
                         'video' => new CURLFile($savedPath),
                         'caption' => $responseMessage
                     );
+                    self::send('video', $post_fields, true);
                 }
-                self::send('photo', $post_fields, true);
             }
 
             return 3;
@@ -149,6 +154,11 @@ class Telegram extends BaseController
             $headers = array(
                 'Content-Type: multipart/form-data'
             );
+        } else if($type == 'video') {
+            $url .= $token.'/sendVideo';
+            $headers = array(
+                'Content-Type: multipart/form-data'
+            );
         }
         set_time_limit(0);
         $ch = curl_init();
@@ -166,8 +176,9 @@ class Telegram extends BaseController
                 CURLOPT_POSTFIELDS      => $post_fields
             )
         );
-        curl_exec($ch);
+        $res = curl_exec($ch);
         curl_close($ch);
+        return $res;
     }
 
     public static function saveMessage($message_type, $content, $payload, $user_id, $created_at): int
