@@ -23,6 +23,10 @@ class Message extends Migration
                 'type' => 'LONGTEXT',
                 'null' => true,
             ],
+            'payload' => [
+                'type' => 'LONGTEXT',
+                'null' => true,
+            ],
             'user_id' => [
                 'type'       => 'BIGINT',
                 'constraint' => 20,

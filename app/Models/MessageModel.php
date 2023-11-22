@@ -5,5 +5,5 @@ use CodeIgniter\Model;
 class MessageModel extends Model
 {
     protected $table = 'messages';
-    protected $allowedFields = ['message_type', 'content', 'user_id', 'created_at'];
+    protected $allowedFields = ['message_type', 'content', 'payload', 'user_id', 'created_at'];
 }

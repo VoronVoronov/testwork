@@ -53,7 +53,7 @@ class Telegram extends BaseController
                         'photo' => $savedPath,
                         'caption' => $responseMessage
                     );
-                    $this->send('send', $chatId, $post_fields);
+                    $this->send('text', $chatId, $post_fields);
                 }
             }
         }
@@ -75,7 +75,7 @@ class Telegram extends BaseController
 
     private function isGreeting($text): bool
     {
-        $greetings = ['привет', 'здравствуйте', 'добрый день', 'доброе утро'];
+        $greetings = ['привет', 'здравствуйте', 'добрый день', 'доброе утро', '/start'];
         foreach ($greetings as $greeting) {
             if (strpos(strtolower($text), $greeting) !== false) {
                 return true;
@@ -106,7 +106,7 @@ class Telegram extends BaseController
             'text' => $text,
             'reply_markup' => $keyboard
         );
-        self::send('send', json_encode($post_fields), true);
+        self::send('text', json_encode($post_fields), true);
     }
 
     private function getFile($fileId) {
@@ -136,7 +136,7 @@ class Telegram extends BaseController
             'Content-Type: application/json'
         );
 
-        if ($type == 'send') {
+        if ($type == 'text') {
             $url .= $token.'/sendMessage';
         } else if($type == 'photo') {
             $url .= $token.'/sendPhoto';
@@ -172,9 +172,9 @@ class Telegram extends BaseController
         curl_exec($ch);
         curl_close($ch);
         return self::saveMessage([
-            'message_type' => 'text',
-            'content' => json_encode($post_fields),
-            'user_id' => $post_fields['chat_id'],
+            'message_type' => $type,
+            'payload' => $post_fields,
+            'user_id' => json_decode($post_fields, true)['chat_id'],
             'created_at' => date('Y-m-d H:i:s')
         ]);
     }
