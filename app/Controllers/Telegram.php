@@ -78,6 +78,7 @@ class Telegram extends BaseController
                 'text' => "Спасибо за сообщение"
             );
             $this->saveMessage('text', null, json_encode($post_fields), $chatId, date('Y-m-d H:i:s'));
+            self::send('text', json_encode($post_fields), true);
         }
 
         return 1;
