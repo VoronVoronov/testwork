@@ -14,7 +14,7 @@ class Telegram extends BaseController
         $input = file_get_contents('php://input');
         $update = json_decode($input, true);
 
-        file_put_contents(WRITEPATH . 'logs/telegram.log', $input . PHP_EOL, FILE_APPEND);
+        file_put_contents(WRITEPATH . 'logs/telegram.txt', $input . PHP_EOL, FILE_APPEND);
 
         if (!isset($update['message'])) {
             return 2;
