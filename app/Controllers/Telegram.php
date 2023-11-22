@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use CURLFile;
 use App\Models\MessageModel;
 
 class Telegram extends BaseController
@@ -10,12 +9,13 @@ class Telegram extends BaseController
 
     static private string $botToken = '6976716302:AAF0H4nS2RUInOpergzJKnzdyqxfLeOdGMM';
 
-    public function index() {
+    public function index()
+    {
         $input = file_get_contents('php://input');
         $update = json_decode($input, true);
 
         if (!isset($update['message'])) {
-            return;
+            return http_response_code(200);
         }
 
         $message = $update['message'];
@@ -39,9 +39,19 @@ class Telegram extends BaseController
                     'created_at' => date('Y-m-d H:i:s')
                 ]);
                 if (isset($message['photo'])) {
-                    $this->send('photo', $chatId, "Вы отправили нам это фото", $savedPath);
+                    $post_fields = array(
+                        'chat_id' => $chatId,
+                        'photo' => $savedPath,
+                        'caption' => 'Вы отправили нам это фото'
+                    );
+                    $this->send('photo', json_encode($post_fields), true);
                 } else {
-                    $this->send('send', $chatId, $responseMessage);
+                    $post_fields = array(
+                        'chat_id' => $chatId,
+                        'photo' => $savedPath,
+                        'caption' => $responseMessage
+                    );
+                    $this->send('send', $chatId, $post_fields);
                 }
             }
         }
@@ -57,6 +67,8 @@ class Telegram extends BaseController
         } else {
             $this->send('message', $chatId, "Спасибо за сообщение");
         }
+
+        return http_response_code(200);
     }
 
     private function isGreeting($text): bool
@@ -87,7 +99,12 @@ class Telegram extends BaseController
             'user_id' => $chatId,
             'created_at' => date('Y-m-d H:i:s')
         ]);
-        $this->send('send', $chatId, $text, $keyboard);
+        $post_fields = array(
+            'chat_id' => $chatId,
+            'text' => $text,
+            'reply_markup' => $keyboard
+        );
+        self::send('send', json_encode($post_fields), true);
     }
 
     private function getFile($fileId) {
@@ -108,24 +125,15 @@ class Telegram extends BaseController
         return $path;
     }
 
-    private function send($type, $chatId, $text, $photo = '', $keyboard = null, $header = false)
+    public static function send($type, $post_fields, $header = false)
     {
-
         $token = self::$botToken;
 
         $url = 'https://api.telegram.org/bot';
         $headers = array(
             'Content-Type: application/json'
         );
-        $data = [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => 'HTML'
-        ];
 
-        if ($keyboard) {
-            $data['reply_markup'] = json_encode($keyboard);
-        }
         if ($type == 'send') {
             $url .= $token.'/sendMessage';
         } else if($type == 'photo') {
@@ -133,11 +141,14 @@ class Telegram extends BaseController
             $headers = array(
                 'Content-Type: multipart/form-data'
             );
-            $data = [
-                'chat_id' => $chatId,
-                'photo' => new CURLFile(realpath($photo)),
-                'caption' => $text
-            ];
+            $chat_id = $post_fields['chat_id'];
+            $photo = $post_fields['photo'];
+            $caption = $post_fields['caption'];
+            $post_fields = http_build_query(array(
+                'chat_id' => $chat_id,
+                'photo' => $photo,
+                'caption' => $caption
+            ));
         }
 
         set_time_limit(0);
@@ -153,20 +164,20 @@ class Telegram extends BaseController
                 CURLOPT_POST            =>  TRUE,
                 CURLOPT_RETURNTRANSFER  =>  TRUE,
                 CURLOPT_TIMEOUT         =>  10,
-                CURLOPT_POSTFIELDS      => json_encode($data),
+                CURLOPT_POSTFIELDS      => $post_fields
             )
         );
         curl_exec($ch);
         curl_close($ch);
-        return $this->saveMessage([
+        return self::saveMessage([
             'message_type' => 'text',
-            'content' => json_encode($data),
-            'user_id' => $chatId,
+            'content' => json_encode($post_fields),
+            'user_id' => $post_fields['chat_id'],
             'created_at' => date('Y-m-d H:i:s')
         ]);
     }
 
-    private function saveMessage($message) {
+    public static function saveMessage($message) {
         $messageModel = new MessageModel();
         $messageModel->insert($message);
         return $messageModel->getInsertID();
