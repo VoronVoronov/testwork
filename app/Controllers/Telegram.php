@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\MessageModel;
+use CURLFile;
 
 class Telegram extends BaseController
 {
@@ -44,21 +45,24 @@ class Telegram extends BaseController
                 $savedPath = $this->saveFile($fileUrl);
                 $responseMessage = "Спасибо за " . (isset($message['photo']) ? "фото" : "видео") . ". Вот ссылка на него: $savedPath";
                 $this->saveMessage('text', $responseMessage, null, $chatId, date('Y-m-d H:i:s'));
+
                 if (isset($message['photo'])) {
                     $post_fields = array(
                         'chat_id' => $chatId,
-                        'photo' => $savedPath,
+                        'photo' => new CURLFile($savedPath),
                         'caption' => 'Вы отправили нам это фото'
                     );
                 } else {
                     $post_fields = array(
                         'chat_id' => $chatId,
-                        'video' => $savedPath,
+                        'video' => new CURLFile($savedPath),
                         'caption' => $responseMessage
                     );
                 }
                 self::send('photo', $post_fields, true);
             }
+
+            return 3;
         }
 
         if ($this->isGreeting($text)) {
@@ -138,7 +142,6 @@ class Telegram extends BaseController
         $headers = array(
             'Content-Type: application/json'
         );
-
         if ($type == 'text') {
             $url .= $token.'/sendMessage';
         } else if($type == 'photo') {
@@ -146,16 +149,7 @@ class Telegram extends BaseController
             $headers = array(
                 'Content-Type: multipart/form-data'
             );
-            $chat_id = $post_fields['chat_id'];
-            $photo = $post_fields['photo'];
-            $caption = $post_fields['caption'];
-            $post_fields = http_build_query(array(
-                'chat_id' => $chat_id,
-                'photo' => $photo,
-                'caption' => $caption
-            ));
         }
-
         set_time_limit(0);
         $ch = curl_init();
 
