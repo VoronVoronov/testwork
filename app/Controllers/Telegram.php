@@ -9,7 +9,7 @@ use ReflectionException;
 class Telegram extends BaseController
 {
 
-    static private string $botToken = '<ВАШ_ТОКЕН>';
+    static private string $botToken = '6976716302:AAF0H4nS2RUInOpergzJKnzdyqxfLeOdGMM';
 
     public function index() {
         $input = file_get_contents('php://input');
