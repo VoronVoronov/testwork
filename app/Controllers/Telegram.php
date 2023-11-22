@@ -1,10 +1,12 @@
-<?php namespace App\Controllers;
+<?php
+
+namespace App\Controllers;
 
 use CURLFile;
 use App\Models\MessageModel;
 use ReflectionException;
 
-class TelegramBot extends BaseController
+class Telegram extends BaseController
 {
 
     static private string $botToken = '<ВАШ_ТОКЕН>';
