@@ -45,7 +45,7 @@ class Telegram extends BaseController
                 } else {
                     $post_fields = array(
                         'chat_id' => $chatId,
-                        'photo' => $savedPath,
+                        'video' => $savedPath,
                         'caption' => $responseMessage
                     );
                 }
@@ -121,7 +121,7 @@ class Telegram extends BaseController
     {
         $path = $_SERVER['DOCUMENT_ROOT'].'/uploads/' . basename($fileUrl);
         file_put_contents($path, file_get_contents($fileUrl));
-        return config('App')->baseURL . '/uploads/' . basename($fileUrl);
+        return config('App')->baseURL . 'uploads/' . basename($fileUrl);
     }
 
     public static function send($type, $post_fields, $header = false)
