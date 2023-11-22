@@ -61,17 +61,15 @@ class Telegram extends BaseController
             }
         }
 
-        if(!empty($data)){
+        if ($this->isGreeting($text)) {
+            $this->saveMessage('text', $text, null, $chatId, date('Y-m-d H:i:s'));
+            $this->sendGreeting($chatId, $name);
+        } else if(!empty($data)){
             $post_fields = array(
                 'chat_id' => $chatId,
                 'text' => "Что подсказать?"
             );
             self::send('text', json_encode($post_fields), true);
-        }
-
-        if ($this->isGreeting($text)) {
-            $this->saveMessage('text', $text, null, $chatId, date('Y-m-d H:i:s'));
-            $this->sendGreeting($chatId, $name);
         } else {
             $post_fields = array(
                 'chat_id' => $chatId,
