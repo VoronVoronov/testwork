@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use CURLFile;
 use App\Models\MessageModel;
-use ReflectionException;
 
 class Telegram extends BaseController
 {
@@ -40,9 +39,9 @@ class Telegram extends BaseController
                     'created_at' => date('Y-m-d H:i:s')
                 ]);
                 if (isset($message['photo'])) {
-                    $this->sendPhoto($chatId, $savedPath, "Вы отправили нам это фото");
+                    $this->send('photo', $chatId, "Вы отправили нам это фото", $savedPath);
                 } else {
-                    $this->sendMessage($chatId, $responseMessage);
+                    $this->send('send', $chatId, $responseMessage);
                 }
             }
         }
@@ -56,7 +55,7 @@ class Telegram extends BaseController
             ]);
             $this->sendGreeting($chatId, $name);
         } else {
-            $this->sendMessage($chatId, "Спасибо за сообщение");
+            $this->send('message', $chatId, "Спасибо за сообщение");
         }
     }
 
@@ -88,7 +87,7 @@ class Telegram extends BaseController
             'user_id' => $chatId,
             'created_at' => date('Y-m-d H:i:s')
         ]);
-        $this->sendMessage($chatId, $text, $keyboard);
+        $this->send('send', $chatId, $text, $keyboard);
     }
 
     private function getFile($fileId) {
@@ -109,24 +108,15 @@ class Telegram extends BaseController
         return $path;
     }
 
-    private function sendPhoto($chatId, $photo, $caption = ''): void
+    private function send($type, $chatId, $text, $photo = '', $keyboard = null, $header = false)
     {
-        $data = [
-            'chat_id' => $chatId,
-            'photo' => new CURLFile(realpath($photo)),
-            'caption' => $caption
-        ];
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.telegram.org/bot".self::$botToken."/sendPhoto");
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        curl_exec($ch);
+        $token = self::$botToken;
 
-    }
-
-    private function sendMessage($chatId, $text, $keyboard = null): void
-    {
+        $url = 'https://api.telegram.org/bot';
+        $headers = array(
+            'Content-Type: application/json'
+        );
         $data = [
             'chat_id' => $chatId,
             'text' => $text,
@@ -136,20 +126,49 @@ class Telegram extends BaseController
         if ($keyboard) {
             $data['reply_markup'] = json_encode($keyboard);
         }
-        $this->saveMessage([
+        if ($type == 'send') {
+            $url .= $token.'/sendMessage';
+        } else if($type == 'photo') {
+            $url .= $token.'/sendPhoto';
+            $headers = array(
+                'Content-Type: multipart/form-data'
+            );
+            $data = [
+                'chat_id' => $chatId,
+                'photo' => new CURLFile(realpath($photo)),
+                'caption' => $text
+            ];
+        }
+
+        set_time_limit(0);
+        $ch = curl_init();
+
+        if($header) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+        curl_setopt_array(
+            $ch,
+            array(
+                CURLOPT_URL             =>  $url,
+                CURLOPT_POST            =>  TRUE,
+                CURLOPT_RETURNTRANSFER  =>  TRUE,
+                CURLOPT_TIMEOUT         =>  10,
+                CURLOPT_POSTFIELDS      => json_encode($data),
+            )
+        );
+        curl_exec($ch);
+        curl_close($ch);
+        return $this->saveMessage([
             'message_type' => 'text',
             'content' => json_encode($data),
             'user_id' => $chatId,
             'created_at' => date('Y-m-d H:i:s')
         ]);
-        file_get_contents("https://api.telegram.org/bot".self::$botToken."/sendMessage?" . http_build_query($data));
     }
 
-    /**
-     * @throws ReflectionException
-     */
     private function saveMessage($message) {
         $messageModel = new MessageModel();
         $messageModel->insert($message);
+        return $messageModel->getInsertID();
     }
 }
