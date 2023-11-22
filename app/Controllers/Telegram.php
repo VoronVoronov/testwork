@@ -24,6 +24,7 @@ class Telegram extends BaseController
         $chatId = $message['chat']['id'];
         $text = $message['text'] ?? '';
         $name = $message['from']['first_name'] ?? 'Друг';
+        $data = $message['callback_query']['data'] ?? '';
 
 
         if (isset($message['photo']) || isset($message['video'])) {
@@ -46,16 +47,24 @@ class Telegram extends BaseController
                         'photo' => $savedPath,
                         'caption' => 'Вы отправили нам это фото'
                     );
-                    $this->send('photo', json_encode($post_fields), true);
+                    self::send('photo', json_encode($post_fields), true);
                 } else {
                     $post_fields = array(
                         'chat_id' => $chatId,
                         'photo' => $savedPath,
                         'caption' => $responseMessage
                     );
-                    $this->send('text', $chatId, $post_fields);
+                    self::send('text', $chatId, $post_fields);
                 }
             }
+        }
+
+        if(!empty($data)){
+            $post_fields = array(
+                'chat_id' => $chatId,
+                'text' => "Что подсказать?"
+            );
+            self::send('message', json_encode($post_fields), true);
         }
 
         if ($this->isGreeting($text)) {
@@ -71,7 +80,7 @@ class Telegram extends BaseController
                 'chat_id' => $chatId,
                 'text' => "Спасибо за сообщение"
             );
-            $this->send('message', $post_fields, true);
+            self::send('message', json_encode($post_fields), true);
         }
 
         return 1;
