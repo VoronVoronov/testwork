@@ -129,6 +129,7 @@ class Telegram extends BaseController
 
     public static function send($type, $post_fields, $header = false)
     {
+        echo '<pre>';print_r($post_fields);echo '</pre>';die;
         $token = self::$botToken;
 
         $url = 'https://api.telegram.org/bot';
