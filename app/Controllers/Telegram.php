@@ -15,7 +15,7 @@ class Telegram extends BaseController
         $update = json_decode($input, true);
 
         if (!isset($update['message'])) {
-            return http_response_code(200);
+            return 2;
         }
 
         $message = $update['message'];
@@ -68,7 +68,7 @@ class Telegram extends BaseController
             $this->send('message', $chatId, "Спасибо за сообщение");
         }
 
-        return http_response_code(200);
+        return 1;
     }
 
     private function isGreeting($text): bool
