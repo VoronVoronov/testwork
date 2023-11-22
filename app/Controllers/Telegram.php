@@ -78,13 +78,14 @@ class Telegram extends BaseController
                 'chat_id' => $chatId,
                 'text' => "Что подсказать?"
             );
+            $this->saveMessage('text', $post_fields['text'], json_encode($post_fields), $chatId, date('Y-m-d H:i:s'));
             self::send('text', json_encode($post_fields), true);
         } else {
             $post_fields = array(
                 'chat_id' => $chatId,
                 'text' => "Спасибо за сообщение"
             );
-            $this->saveMessage('text', null, json_encode($post_fields), $chatId, date('Y-m-d H:i:s'));
+            $this->saveMessage('text', $post_fields['text'], json_encode($post_fields), $chatId, date('Y-m-d H:i:s'));
             self::send('text', json_encode($post_fields), true);
         }
 
