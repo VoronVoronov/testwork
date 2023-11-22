@@ -58,7 +58,7 @@ class Telegram extends BaseController
                 'chat_id' => $chatId,
                 'text' => "Что подсказать?"
             );
-            self::send('message', json_encode($post_fields), true);
+            self::send('text', json_encode($post_fields), true);
         }
 
         if ($this->isGreeting($text)) {
