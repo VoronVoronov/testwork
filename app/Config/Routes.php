@@ -6,4 +6,4 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-$routes->post('/webhook', 'Telegram::index');
+$routes->match(['get', 'put', 'post'], 'webhook', 'Telegram::index');
