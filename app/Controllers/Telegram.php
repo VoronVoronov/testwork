@@ -174,7 +174,7 @@ class Telegram extends BaseController
         return self::saveMessage([
             'message_type' => $type,
             'payload' => $post_fields,
-            'user_id' => json_decode($post_fields, true)['chat_id'],
+            'user_id' => json_decode($post_fields, true)['chat_id'] ?? 0,
             'created_at' => date('Y-m-d H:i:s')
         ]);
     }
