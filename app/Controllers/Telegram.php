@@ -35,19 +35,14 @@ class Telegram extends BaseController
                 $fileUrl = "https://api.telegram.org/file/bot".self::$botToken."/".$filePath;
                 $savedPath = $this->saveFile($fileUrl);
                 $responseMessage = "Спасибо за " . (isset($message['photo']) ? "фото" : "видео") . ". Вот ссылка на него: $savedPath";
-                $this->saveMessage([
-                    'message_type' => 'text',
-                    'content' => $responseMessage,
-                    'user_id' => $chatId,
-                    'created_at' => date('Y-m-d H:i:s')
-                ]);
+                $this->saveMessage('text', $responseMessage, null, $chatId, date('Y-m-d H:i:s'));
                 if (isset($message['photo'])) {
                     $post_fields = array(
                         'chat_id' => $chatId,
                         'photo' => $savedPath,
                         'caption' => 'Вы отправили нам это фото'
                     );
-                    self::send('photo', json_encode($post_fields), true);
+                    self::send('photo', $post_fields, true);
                 } else {
                     $post_fields = array(
                         'chat_id' => $chatId,
@@ -68,19 +63,14 @@ class Telegram extends BaseController
         }
 
         if ($this->isGreeting($text)) {
-            $this->saveMessage([
-                'message_type' => 'text',
-                'content' => $text,
-                'user_id' => $chatId,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
+            $this->saveMessage('text', $text, null, $chatId, date('Y-m-d H:i:s'));
             $this->sendGreeting($chatId, $name);
         } else {
             $post_fields = array(
                 'chat_id' => $chatId,
                 'text' => "Спасибо за сообщение"
             );
-            self::send('message', json_encode($post_fields), true);
+            $this->saveMessage('text', null, json_encode($post_fields), $chatId, date('Y-m-d H:i:s'));
         }
 
         return 1;
@@ -108,12 +98,7 @@ class Telegram extends BaseController
         ];
 
         $text = "Здравствуйте, $name";
-        $this->saveMessage([
-            'message_type' => 'text',
-            'content' => $text,
-            'user_id' => $chatId,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+        $this->saveMessage('text', $text, null, $chatId, date('Y-m-d H:i:s'));
         $post_fields = array(
             'chat_id' => $chatId,
             'text' => $text,
@@ -135,15 +120,14 @@ class Telegram extends BaseController
 
     private function saveFile($fileUrl): string
     {
-        $path = 'uploads/' . basename($fileUrl);
+        $path = $_SERVER['DOCUMENT_ROOT'].'/uploads/' . basename($fileUrl);
         file_put_contents($path, file_get_contents($fileUrl));
-        return $path;
+        return config('App')->baseURL . '/uploads/' . basename($fileUrl);
     }
 
     public static function send($type, $post_fields, $header = false)
     {
         $token = self::$botToken;
-
         $url = 'https://api.telegram.org/bot';
         $headers = array(
             'Content-Type: application/json'
@@ -184,17 +168,18 @@ class Telegram extends BaseController
         );
         curl_exec($ch);
         curl_close($ch);
-        return self::saveMessage([
-            'message_type' => $type,
-            'payload' => $post_fields,
-            'user_id' => json_decode($post_fields, true)['chat_id'],
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
     }
 
-    public static function saveMessage($message) {
+    public static function saveMessage($message_type, $content, $payload, $user_id, $created_at): int
+    {
         $messageModel = new MessageModel();
-        $messageModel->insert($message);
+        $messageModel->insert([
+            'message_type' => $message_type,
+            'content' => $content,
+            'payload' => $payload,
+            'user_id' => $user_id,
+            'created_at' => $created_at
+        ]);
         return $messageModel->getInsertID();
     }
 }
