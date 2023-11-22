@@ -15,9 +15,11 @@ class Telegram extends BaseController
         $update = json_decode($input, true);
 
         file_put_contents(WRITEPATH . 'logs/telegram.txt', $input . PHP_EOL, FILE_APPEND);
-//        if (!isset($update['message']) || !isset($update['callback_query'])) {
-//            return 2;
-//        }
+
+        if(!isset($update['message']) && !isset($update['callback_query'])){
+            return 1;
+        }
+
         if(isset($update['message'])){
             $message = $update['message'];
             $chatId = $message['chat']['id'];
